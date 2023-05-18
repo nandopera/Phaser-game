@@ -5,11 +5,12 @@ window.onload = function(){
         pixelArt: true,
         width: 800,
         height: 600,
-        scene: [Scene01],
+        scene: [Preload,StartScene,Scene01],
         physics: {
             default: 'arcade',
             arcade: {
-                gravity: {y:1000}
+                gravity: {y:1000},
+                debug: true
             }
         }
     }

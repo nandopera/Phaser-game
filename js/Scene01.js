@@ -2,31 +2,18 @@ class Scene01 extends Phaser.Scene{
     constructor(){
         super('Scene01')
     }
-    preload(){
-        this.load.image('sky', 'assets/sky.png')
-        this.load.image('platform', 'assets/platform.png')
-        this.load.image('platformBase', 'assets/platformBase.png')
-        this.load.spritesheet('player', 'assets/player.png', {frameWidth: 32, frameHeight: 32})
-        this.load.spritesheet('sphere', 'assets/sphere.png', {frameWidth: 41, frameHeight: 41})
-    }
+   
     create(){
         this.sky = this.add.image(0,0,'sky').setOrigin(0,0)
         this.sky.displayWidth = 1000
         this.sky.displayHeight = 600
         
-        this.player = this.physics.add.sprite(50,500, 'player').setCollideWorldBounds(true).setScale(3).setBounce(0.3)
+        this.player = this.physics.add.sprite(50,500, 'player').setCollideWorldBounds(true).setScale(2.3).setBounce(0.3)
         this.player.canJump = true
+        this.player.body.setSize(16,32)
+        this.player.body.setOffset(10, 0);
 
-        this.anims.create({
-            key: 'walk',
-            frames: this.anims.generateFrameNumbers('player', {
-                start: 0,
-                end: 3
-            }),
-            frameRate: 6,
-            repeat: -1
-        })
-        
+            
         this.control = this.input.keyboard.createCursorKeys()
 
         this.platforms = this.physics.add.staticGroup()
@@ -34,7 +21,7 @@ class Scene01 extends Phaser.Scene{
         /* this.platforms.create(0,600,'platform').setOrigin(0,1).setScale(2.5,1).refreshBody() */
         this.platforms.create(200,200,'platform')
         this.platforms.create(1100,200,'platform')
-        this.platforms.create(1100,475,'platform')
+        this.platforms.create(1090,475,'platform')
         this.platforms.create(600,400,'platform').setScale(0.75,1).refreshBody()
 
         this.mPlatforms = this.physics.add.group({
@@ -61,31 +48,54 @@ class Scene01 extends Phaser.Scene{
             }
         })
 
-            this.anims.create({
-                key: 'upDown',
-                frames: this.anims.generateFrameNumbers('sphere',{
-                    start: 0,
-                    end: 5
-                }),
-                frameRate: 6,
-                repeat: -1
-            })
-
             this.Spheres.children.iterate((c) => {
                 c.setBounceY(Phaser.Math.FloatBetween(.2,.6))
-                c.anims.play('upDown')
+                c.anims.play('upDown');
+                c.body.setSize(20,35);
             })
 
+            this.score = 0
+            this.txtScore = this.add.text(15,15,`SCORE: ${this.score}`,{fontSize: `3rem`, fontFamily: `Impact`}).setShadow(0,0, `#000`, 2)
+            .setScrollFactor(0)
+            this.setScore()
+
+            this.enemies = this.physics.add.group()
+            let enemy = this.enemies.create(Phaser.Math.Between(50,950),0, `enemy`)
+            .setBounce(1).setCollideWorldBounds(true).setVelocity(Math.random() < .5 ? -200 : 200, 50).setScale(2)
+
         this.physics.add.collider(this.player, this.platforms)
+        this.physics.add.collider(this.player, this.enemies, this.enemyHit, null, this)
         this.physics.add.collider(this.player, this.platformBase)
         this.physics.add.collider(this.player, this.mPlatforms, this.platformMoveThings)
         this.physics.add.collider(this.Spheres, this.platforms)
+        this.physics.add.collider(this.enemies, this.platforms)
+        this.physics.add.collider(this.enemies, this.mPlatforms)
         this.physics.add.collider(this.Spheres, this.platformBase)
-        /* this.physics.add.collider(this.Spheres, this.player) */
         this.physics.add.collider(this.Spheres, this.mPlatforms, this.platformMoveThings)
+        this.physics.add.overlap(this.player, this.Spheres, this.collectSphere, null, this)
+
 
         this.physics.world.setBounds(0,0,1000,600)
+
         this.cameras.main.setBounds(0,0,1000,600).startFollow(this.player)
+        this.gameOver = false
+    }
+
+    enemyHit(player, enemy){
+        this.physics.pause()
+        player.setTint(0xff3300)
+        player.anims.stop()
+        this.gameOver = true
+    }    
+
+    setScore(){
+        this.txtScore.setText(this.score > 9 ? `SCORE: ${this.score}` : `SCORE: 0${this.score}`)
+    }
+
+    collectSphere(p, s){
+        s.destroy()
+        this.score++
+        this.setScore()
     }
 
     movePlatform(p){
@@ -100,6 +110,7 @@ class Scene01 extends Phaser.Scene{
     }
 
     update(){
+        if(!this.gameOver){
         if(this.control.left.isDown){
             this.player.flipX = true
             this.player.anims.play('walk', true)
@@ -130,5 +141,6 @@ class Scene01 extends Phaser.Scene{
         this.mPlatforms.children.iterate((plat) => {
             this.movePlatform(plat)
         })
+    }
     }
 }
