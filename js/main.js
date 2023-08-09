@@ -5,7 +5,7 @@ window.onload = function(){
         pixelArt: true,
         width: 800,
         height: 600,
-        scene: [Preload,StartScene,Scene01],
+        scene: [Preload,Scene01],
         physics: {
             default: 'arcade',
             arcade: {
